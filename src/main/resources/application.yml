@@ -1,0 +1,33 @@
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          public-key-location: file:${ECHOLIFE_PUBLIC_KEY_PATH:./keys/public.pem}
+          audiences: echolife-session
+
+server:
+  port: 8082
+
+echolife:
+  jwt:
+    public-key-path: ${ECHOLIFE_PUBLIC_KEY_PATH:./keys/public.pem}
+    issuer: ${ECHOLIFE_JWT_ISSUER:http://identity-consent-service}
+
+  identity:
+    base-url: ${IDENTITY_BASE_URL:http://localhost:8081}
+    internal-service-key: ${ECHOLIFE_INTERNAL_SERVICE_KEY}
+
+  dynamodb:
+    endpoint: ${DYNAMODB_ENDPOINT:http://localhost:8000}
+    table-name: ${DYNAMODB_SESSION_TABLE:echolife-sessions}
+    auto-create-table: ${DYNAMODB_AUTO_CREATE_TABLE:true}
+
+  session:
+    ttl-seconds: ${SESSION_TTL_SECONDS:1800}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,readiness,metrics
