@@ -5,11 +5,11 @@ FROM maven:3.9.9-eclipse-temurin-21-jammy AS builder
 
 WORKDIR /app
 
-# Cache dependencies to optimize build times
+# Cache dependencies
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
-# Copy source code and package application
+# Copy source and build JAR
 COPY src ./src
 RUN mvn clean package -DskipTests -B
 
@@ -20,17 +20,14 @@ FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /app
 
-# Run with non-root user for security
+# Create dedicated non-root user
 RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 
-# Create directory for security keys and set permissions
+# Create keys directory with appropriate permissions
 RUN mkdir -p /app/keys && chown -R appuser:appgroup /app
 
-# Copy the built JAR file
+# Copy the built application JAR
 COPY --from=builder --chown=appuser:appgroup /app/target/*.jar app.jar
-
-# Copy local keys directory into the container image
-COPY --chown=appuser:appgroup keys/ /app/keys/
 
 USER appuser
 
