@@ -9,7 +9,7 @@ jobs:
   build-and-push:
     name: Build & Push Image
     runs-on: ubuntu-latest
-    environment: Devops
+    environment: New
 
     steps:
       - name: Checkout Code
