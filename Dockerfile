@@ -5,10 +5,10 @@ FROM maven:3.9-eclipse-temurin-21-alpine AS builder
 
 WORKDIR /build
 
-# Copy dependency definition first for Docker layer caching
+# Copy dependency definition first for layer caching
 COPY pom.xml .
 
-# Download dependencies offline to speed up subsequent builds
+# Download dependencies offline
 RUN mvn dependency:go-offline -B
 
 # Copy project source code
@@ -27,14 +27,11 @@ WORKDIR /app
 # Create a non-root system user and group for security
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Create directory for JWT public key and configure ownership
+# Create directory for JWT public keys & set ownership
 RUN mkdir -p /app/keys && chown -R appuser:appgroup /app
 
 # Copy the built jar from the builder stage
 COPY --from=builder /build/target/*.jar /app/app.jar
-
-# Copy public key directory if present locally
-COPY keys/ /app/keys/
 
 # Set file permissions for non-root user
 RUN chown -R appuser:appgroup /app
@@ -45,7 +42,7 @@ USER appuser
 # Expose the service port
 EXPOSE 8082
 
-# JVM flags for container environment & garbage collection
+# JVM flags for container memory management
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
 
 # Run Spring Boot application
