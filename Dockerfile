@@ -5,16 +5,16 @@ FROM maven:3.9-eclipse-temurin-21-alpine AS builder
 
 WORKDIR /build
 
-# Copy dependency definition first for layer caching
+# Copy dependency descriptor first for layer caching
 COPY pom.xml .
 
-# Download dependencies offline
+# Pre-fetch dependencies offline
 RUN mvn dependency:go-offline -B
 
-# Copy project source code
+# Copy application source code
 COPY src ./src
 
-# Build production jar without running unit tests
+# Build production JAR without running unit tests
 RUN mvn clean package -DskipTests
 
 # ===========================================================
@@ -24,13 +24,13 @@ FROM eclipse-temurin:21-jre-alpine AS runner
 
 WORKDIR /app
 
-# Create a non-root system user and group for security
+# Create non-root system group and user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Create directory for JWT public keys & set ownership
+# Create target directory for runtime key mounting
 RUN mkdir -p /app/keys && chown -R appuser:appgroup /app
 
-# Copy the built jar from the builder stage
+# Copy compiled JAR from builder stage
 COPY --from=builder /build/target/*.jar /app/app.jar
 
 # Set file permissions for non-root user
@@ -39,11 +39,11 @@ RUN chown -R appuser:appgroup /app
 # Switch to non-root user
 USER appuser
 
-# Expose the service port
+# Expose microservice port
 EXPOSE 8082
 
-# JVM flags for container memory management
+# JVM configuration for container resource limits
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
 
-# Run Spring Boot application
+# Run Spring Boot microservice
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
