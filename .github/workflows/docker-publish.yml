@@ -9,7 +9,7 @@ jobs:
   build-and-push:
     name: Build & Push Image
     runs-on: ubuntu-latest
-    environment: New
+    environment: Heyyyyy
 
     steps:
       - name: Checkout Code
@@ -42,6 +42,32 @@ jobs:
             ./mvnw dependency:resolve -q
           else
             mvn dependency:resolve -q
+          fi
+
+      # -----------------------------------------------------------
+      # 2.5 CODE QUALITY: SonarQube Analysis
+      # -----------------------------------------------------------
+      - name: Analyze with SonarQube
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          chmod +x ./mvnw || true
+          
+          if [ -f "./mvnw" ]; then
+            ./mvnw clean package org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+              -Dsonar.projectKey=identity-consent-service \
+              -Dsonar.projectName="Identity Consent Service" \
+              -Dsonar.host.url="$SONAR_HOST_URL" \
+              -Dsonar.token="$SONAR_TOKEN" \
+              -DskipTests
+          else
+            mvn clean package org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+              -Dsonar.projectKey=identity-consent-service \
+              -Dsonar.projectName="Identity Consent Service" \
+              -Dsonar.host.url="$SONAR_HOST_URL" \
+              -Dsonar.token="$SONAR_TOKEN" \
+              -DskipTests
           fi
 
       # -----------------------------------------------------------
@@ -113,7 +139,7 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: '#00ff00'
-          SLACK_TITLE: '✅ CI Pipeline Succeeded: session-orchestrator-service'
+          SLACK_TITLE: '✅ CI Pipeline Succeeded: identity-consent-service'
           SLACK_MESSAGE: 'Pipeline completed successfully. Trivy scans passed and image build #${{ github.run_number }} is now available in AWS ECR.'
 
       # -----------------------------------------------------------
@@ -125,5 +151,5 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: '#ff0000'
-          SLACK_TITLE: '🚨 CI Pipeline Failed: session-orchestrator-service'
-          SLACK_MESSAGE: 'A pipeline step failed (Gitleaks, Trivy scan, or Docker build/push). Please check the GitHub Actions logs.'
+          SLACK_TITLE: '🚨 CI Pipeline Failed: identity-consent-service'
+          SLACK_MESSAGE: 'A pipeline step failed (Gitleaks, SonarQube, Trivy scan, or Docker build/push). Please check the GitHub Actions logs.'
