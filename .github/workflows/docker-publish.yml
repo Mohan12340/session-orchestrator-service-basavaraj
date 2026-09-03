@@ -26,7 +26,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # -----------------------------------------------------------
-      # 2. SETUP JAVA & POPULATE MAVEN CACHE (Prevents Trivy 429)
+      # 2. SETUP JAVA & POPULATE MAVEN CACHE
       # -----------------------------------------------------------
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -71,7 +71,19 @@ jobs:
           fi
 
       # -----------------------------------------------------------
-      # 3. SECURITY: Trivy Filesystem Scan
+      # 2.6 CODE QUALITY: Enforce SonarQube Quality Gate
+      # -----------------------------------------------------------
+      - name: Enforce SonarQube Quality Gate
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          pollingTimeoutSec: 300
+          scanMetadataReportFile: target/sonar/report-task.txt
+
+      # -----------------------------------------------------------
+      # 3. SECURITY: Trivy Filesystem Scan (Strict Gate)
       # -----------------------------------------------------------
       - name: Run Trivy FS Vulnerability Scanner
         uses: aquasecurity/trivy-action@master
@@ -80,7 +92,7 @@ jobs:
           scan-ref: '.'
           format: 'table'
           severity: 'CRITICAL,HIGH'
-          exit-code: '0'
+          exit-code: '1'
 
       # -----------------------------------------------------------
       # 4. AWS AUTHENTICATION
@@ -108,7 +120,7 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
 
       # -----------------------------------------------------------
-      # 6. SECURITY: Trivy Container Image Scan (Before Push)
+      # 6. SECURITY: Trivy Container Image Scan (Strict Gate)
       # -----------------------------------------------------------
       - name: Run Trivy Image Vulnerability Scanner
         uses: aquasecurity/trivy-action@master
@@ -116,7 +128,7 @@ jobs:
           image-ref: ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ github.run_number }}
           format: 'table'
           severity: 'CRITICAL,HIGH'
-          exit-code: '0'
+          exit-code: '1'
 
       # -----------------------------------------------------------
       # 7. DEPLOY: Push Verified Image to AWS ECR
@@ -140,7 +152,7 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: '#00ff00'
           SLACK_TITLE: '✅ CI Pipeline Succeeded: session-orchestrator-service'
-          SLACK_MESSAGE: 'Pipeline completed successfully. Trivy scans passed and image build #${{ github.run_number }} is now available in AWS ECR.'
+          SLACK_MESSAGE: 'Pipeline completed successfully. Quality gates passed and image build #${{ github.run_number }} is now available in AWS ECR.'
 
       # -----------------------------------------------------------
       # 9. NOTIFICATIONS: Slack Alert on Failure
@@ -152,4 +164,4 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: '#ff0000'
           SLACK_TITLE: '🚨 CI Pipeline Failed: session-orchestrator-service'
-          SLACK_MESSAGE: 'A pipeline step failed (Gitleaks, SonarQube, Trivy scan, or Docker build/push). Please check the GitHub Actions logs.'
+          SLACK_MESSAGE: 'A quality gate blocked the deployment (Gitleaks, SonarQube, Trivy, or Docker build failed). Please check the GitHub Actions logs.'
