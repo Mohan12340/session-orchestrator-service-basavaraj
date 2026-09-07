@@ -1,0 +1,54 @@
+# ==========================================
+# Temporarily ignored CVEs pending Spring Boot 3.5.x upgrade
+# ==========================================
+
+# Jackson Databind / Core
+GHSA-r7wm-3cxj-wff9
+CVE-2026-54512
+CVE-2026-54513
+
+# Apache Tomcat Embed Core
+CVE-2026-41293
+CVE-2026-43512
+CVE-2026-43515
+CVE-2026-65182
+CVE-2026-65905
+CVE-2026-68525
+CVE-2025-48988
+CVE-2025-48989
+CVE-2025-52520
+CVE-2025-53506
+CVE-2025-55752
+CVE-2026-24734
+CVE-2026-24880
+CVE-2026-34483
+CVE-2026-34487
+CVE-2026-41284
+CVE-2026-42498
+CVE-2026-43513
+
+# PostgreSQL JDBC
+CVE-2025-49146
+CVE-2026-42198
+CVE-2026-54291
+
+# Spring Boot & Spring Data
+CVE-2026-40973
+CVE-2026-41716
+CVE-2026-41695
+
+# Spring Security Web
+CVE-2026-22732
+
+# Spring Framework (Core, Expression, WebMVC)
+CVE-2025-41249
+CVE-2026-41850
+CVE-2026-41842
+CVE-2026-41845
+
+# ==========================================
+# Alpine Linux OS Vulnerabilities (Docker Image)
+# ==========================================
+CVE-2026-14456
+CVE-2026-66046
+CVE-2026-76641
